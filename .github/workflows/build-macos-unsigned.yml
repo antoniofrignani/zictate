@@ -1,0 +1,60 @@
+name: Build macOS Unsigned
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build unsigned Release app
+        run: |
+          xcodebuild \
+            -project Zictate.xcodeproj \
+            -scheme Zictate \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -derivedDataPath .build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package app
+        run: |
+          APP_PATH=".build/DerivedData/Build/Products/Release/Zictate.app"
+          test -d "$APP_PATH"
+          ditto -c -k --keepParent "$APP_PATH" Zictate-macOS-unsigned.zip
+          shasum -a 256 Zictate-macOS-unsigned.zip | tee Zictate-macOS-unsigned.sha256
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zictate-macOS-unsigned
+          path: |
+            Zictate-macOS-unsigned.zip
+            Zictate-macOS-unsigned.sha256
+
+      - name: Create GitHub release assets (tag builds)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Zictate-macOS-unsigned.zip
+            Zictate-macOS-unsigned.sha256
+          generate_release_notes: true

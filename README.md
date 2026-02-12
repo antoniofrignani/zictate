@@ -74,6 +74,32 @@ Expected Apple Silicon path:
 - Set **CLI Path** to `/opt/homebrew/bin/whisper-cli` (or keep auto-discovery if it works).
 - Configure trigger + language in **Dictation**.
 
+## Unsigned GitHub Build (No Notarization)
+
+This repository includes a GitHub Actions workflow that builds an unsigned macOS `.app` and publishes:
+
+- `Zictate-macOS-unsigned.zip`
+- `Zictate-macOS-unsigned.sha256`
+
+Workflow file:
+
+- `.github/workflows/build-macos-unsigned.yml`
+
+How to publish a downloadable build:
+
+1. Push a tag like `v0.1.0` (or run the workflow manually from Actions).
+2. Download the produced ZIP from the workflow artifact or GitHub Release assets.
+
+Important:
+
+- Because the app is not notarized, macOS Gatekeeper will warn users.
+- Users can still run it by right-clicking the app and selecting **Open**, then confirming.
+- If needed, users can remove quarantine from Terminal:
+
+```bash
+xattr -dr com.apple.quarantine /path/to/Zictate.app
+```
+
 ## BYOM Example (Italian)
 
 Model page URL:
